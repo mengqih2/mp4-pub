@@ -15,7 +15,7 @@ grading:
     - "^> Task .*"
     - "^> Transform .*"
 scoring:
-  max: 100
+  max: 110
   selectors:
     - checkstyle
     - test
