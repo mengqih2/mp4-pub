@@ -135,13 +135,28 @@ var drawText = function drawText(textContent, lineAngle, lineLength, x, y) {
  * Returns the end point of the double bond.
  */
 
-var drawDoubleBond = function drawDoubleBond(angle, length, x, y) {
+var drawDoubleBond = function drawDoubleBond(angle, length, x, y, color) {
   // Sines and cosines necessary to stagger second line properly
   var deltaX = Math.sin(angle) * 6;
   var deltaY = -Math.cos(angle) * 6;
   var newEndPoint = drawLine(angle, length, x, y); // Offset line to be the double bond
 
   line(x + deltaX, y + deltaY, newEndPoint.x + deltaX, newEndPoint.y + deltaY);
+
+  if (USE_COLOR === true) {
+    fill(color);
+    stroke(color);
+    drawLine(angle + Math.PI, length / 2, newEndPoint.x, newEndPoint.y);
+    drawLine(
+      angle + Math.PI,
+      length / 2,
+      newEndPoint.x + deltaX,
+      newEndPoint.y + deltaY
+    );
+  }
+
+  fill(0);
+  stroke(0);
   return newEndPoint;
 };
 
@@ -198,12 +213,12 @@ var drawHalogen = function drawHalogen(formula, angle, lineLength, x, y) {
 };
 
 var drawCarbonyl = function drawCarbonyl(angle, lineLength, x, y) {
-  var startingPoint = drawDoubleBond(angle, lineLength, x, y);
+  var color = "#FF0000";
+  var startingPoint = drawDoubleBond(angle, lineLength, x, y, color);
 
   if (USE_COLOR === true) {
     fill(255, 0, 0);
     stroke(255, 0, 0);
-    drawLine(angle + Math.PI, lineLength / 2, startingPoint.x, startingPoint.y);
   }
 
   drawText("O", angle, lineLength, startingPoint.x, startingPoint.y);

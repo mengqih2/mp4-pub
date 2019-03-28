@@ -125,14 +125,25 @@ const drawText = (textContent, lineAngle, lineLength, x, y) => {
  *
  * Returns the end point of the double bond.
  */
-const drawDoubleBond = (angle, length, x, y) => {
+const drawDoubleBond = (angle, length, x, y, color) => {
   // Sines and cosines necessary to stagger second line properly
   const deltaX = Math.sin(angle) * 6
   const deltaY = -Math.cos(angle) * 6
+
   const newEndPoint = drawLine(angle, length, x, y)
 
   // Offset line to be the double bond
   line(x + deltaX, y + deltaY, newEndPoint.x + deltaX, newEndPoint.y + deltaY)
+
+  if (USE_COLOR === true) {
+        fill(color)
+        stroke(color)
+        drawLine(angle + Math.PI, length/2, newEndPoint.x, newEndPoint.y)
+        drawLine(angle + Math.PI, length/2, newEndPoint.x + deltaX, newEndPoint.y + deltaY)
+  }
+
+  fill(0)
+  stroke(0)
 
   return newEndPoint
 }
@@ -178,11 +189,12 @@ const drawHalogen = (formula, angle, lineLength, x, y) => {
 
 
 const drawCarbonyl = (angle, lineLength, x, y) => {
-  const startingPoint = drawDoubleBond(angle, lineLength, x, y)
+  const color = "#FF0000"
+  const startingPoint = drawDoubleBond(angle, lineLength, x, y, color)
+
   if (USE_COLOR === true) {
-    fill(255, 0, 0)
-    stroke(255, 0, 0)
-    drawLine(angle + Math.PI, lineLength/2, startingPoint.x, startingPoint.y)
+      fill(255, 0, 0)
+      stroke(255, 0, 0)
   }
 
   drawText('O', angle, lineLength, startingPoint.x, startingPoint.y)
