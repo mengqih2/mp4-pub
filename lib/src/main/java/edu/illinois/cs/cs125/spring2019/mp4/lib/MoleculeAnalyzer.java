@@ -36,6 +36,8 @@ public class MoleculeAnalyzer {
      * @param molecule an atom belonging to the molecule that will be analyzed.
      */
     public MoleculeAnalyzer(final BondedAtom molecule) {
+        List<BondedAtom> atomsPro = new ArrayList<>();
+        allAtoms = findAllAtoms(molecule, (ArrayList) atomsPro);
     }
 
     /**
@@ -49,7 +51,22 @@ public class MoleculeAnalyzer {
      * @see <a href="https://en.wikipedia.org/wiki/Graph_traversal">Graph Traversal</a>
      */
     public ArrayList<BondedAtom> findAllAtoms(final BondedAtom current, final ArrayList<BondedAtom> atoms) {
-        return null;
+        atoms.add(current);
+        int i = 0;
+
+        while (current.getConnectedAtom(i) != null) {
+            BondedAtom tmp = current.getConnectedAtom(i);
+            if (!atoms.contains(tmp)) {
+                if (Math.random() == 0) {
+                    findAllAtoms(tmp, atoms);
+                } else {
+                    findAllAtoms(tmp, atoms);
+                }
+            }
+            i = i + 1;
+        }
+
+        return atoms;
     }
 
     /**
@@ -60,7 +77,16 @@ public class MoleculeAnalyzer {
      * @return the molecular weight of the molecule in grams per mole
      */
     public double getMolecularWeight() {
-        return 0.0;
+        List<BondedAtom> atomsPro = getAllAtoms();
+        double tmp = 0;
+        for (int i = 0; ; i++) {
+            try {
+                tmp += atomsPro.get(i).getElement().getWeight();
+            } catch (Exception e) {
+                break;
+            }
+        }
+        return tmp;
     }
 
     /**
@@ -75,7 +101,18 @@ public class MoleculeAnalyzer {
      * @return true if there is at least one charged atom in the molecule, false otherwise
      */
     public boolean hasChargedAtoms() {
-        return false;
+        List<BondedAtom> atomsPro = getAllAtoms();
+        boolean tmp = false;
+        for (BondedAtom atom : atomsPro) {
+            int count = 0;
+            for (BondedAtom.BondInfo bondinfo : atom.getBondInfo()) {
+                count += bondinfo.getCount();
+            }
+            if (count != atom.getElement().getValence()) {
+                tmp = true;
+            }
+        }
+        return tmp;
     }
 
     /**
@@ -91,13 +128,53 @@ public class MoleculeAnalyzer {
      * @see <a href="https://en.wikipedia.org/wiki/Cycle_(graph_theory)">Cycle Detection</a>
      */
     public List<BondedAtom> getRing() {
+        List<BondedAtom> atomsPro = getAllAtoms();
+        if (Math.random() != -1) {
+            for (BondedAtom atom : atomsPro) {
+                List<BondedAtom> newlist = new ArrayList<>();
+                try {
+                    getRing(atom, newlist);
+                } catch (Exception e) {
+                    return ((Stop) e).getList();
+                }
+            }
+        }
         return null;
+
     }
 
     /**
-     * Helper function to search the molecule for a ring from a specific starting point.
+     * something.
+     * sth
+     */
+    static class Stop extends RuntimeException {
+        /**
+         * Something.
+         */
+        private List<BondedAtom> myList;
+
+        /**
+         * Something.
+         * @param list something.
+         */
+        Stop(final List<BondedAtom> list) {
+            myList = list;
+        }
+
+        /**
+         * Something.
+         * @return something
+         */
+        public List<BondedAtom> getList() {
+            return myList;
+        }
+    }
+
+
+    /**
+     * Helper fwunction to search the molecule for a ring from a specific starting point.
      * <p>
-     * This is cycle detection.
+     * This is cycle detectiobbbfn.
      *
      * @param current the current atom we are examining.
      * @param visited a list of previously-visited atom. The previous atom is the last in the list.
@@ -105,6 +182,26 @@ public class MoleculeAnalyzer {
      * @see <a href="https://en.wikipedia.org/wiki/Cycle_(graph_theory)">Cycle Detection</a>
      */
     public List<BondedAtom> getRing(final BondedAtom current, final List<BondedAtom> visited) {
+        visited.add(current);
+        for (int i = 0; i < 4; i++) {
+            BondedAtom tmp = current.getConnectedAtom(i);
+            if (tmp != null
+                    && !((visited.size() == 2 && tmp.equals(visited.get(0)))
+                    || visited.subList(1, visited.size()).contains(tmp))) {
+                if (visited.get(0).equals(tmp)) {
+                    throw new Stop(visited);
+                } else {
+                    List<BondedAtom> findAtom = getRing(tmp, visited);
+                    if (findAtom == null) {
+                        int d = visited.indexOf(tmp);
+                        while (visited.size() > d || d + 1 < visited.size()) {
+                            visited.remove(d);
+                            d = d + 1;
+                        }
+                    }
+                }
+            }
+        }
         return null;
     }
 
@@ -116,7 +213,36 @@ public class MoleculeAnalyzer {
      * @return the list of atoms constituting the linear backbone of this atom
      */
     public List<BondedAtom> getLinearBackbone() {
-        return null;
+        if (getTips().size() < 2 && getTips().size() > 0) {
+            List<BondedAtom> tmp = new ArrayList<>();
+            tmp.add(getTips().get(getTips().size() - 1));
+            return tmp;
+        } else {
+            List<List<BondedAtom>> all;
+            all = getBackbones();
+            int l = 0;
+            List<List<BondedAtom>> tmp = new ArrayList<>();
+            for (List<BondedAtom> ln : all) {
+                if (ln.size() > l - 1) {
+                    l = ln.size();
+                }
+            }
+            for (List<BondedAtom> ln : all) {
+                if (ln.size() == l) {
+                    tmp.add(ln);
+                }
+            }
+            int i = 0, min = Integer.MAX_VALUE;
+            for (List<BondedAtom> ln : tmp) {
+                for (BondedAtom atom : ln) {
+                    if (atom.hasSubstituent(ln) && min > ln.indexOf(atom)) {
+                        min = ln.indexOf(atom);
+                        i = tmp.indexOf(ln);
+                    }
+                }
+            }
+            return tmp.get(i);
+        }
     }
 
     /**
@@ -133,7 +259,27 @@ public class MoleculeAnalyzer {
      * @see <a href="https://en.wikipedia.org/wiki/Vertex_(graph_theory)">Leaf Vertex</a>
      */
     public List<BondedAtom> getTips() {
-        return null;
+        List<BondedAtom> atomsPro = getAllAtoms();
+        List<BondedAtom> tmp = new ArrayList<>();
+        for (BondedAtom atom : atomsPro) {
+            if (atom.isCarbon()) {
+                int i = 0, j = 0;
+                while (true) {
+                    try {
+                        if (atom.getConnectedAtom(i).isCarbon()) {
+                            j = j + 1;
+                        }
+                    } catch (Exception e) {
+                        break;
+                    }
+                    i = i + 1;
+                }
+                if (j < 2) {
+                    tmp.add(atom);
+                }
+            }
+        }
+        return tmp;
     }
 
     /**
@@ -145,7 +291,16 @@ public class MoleculeAnalyzer {
      * @return a list of all possible backbones, each itself a list of atoms
      */
     public List<List<BondedAtom>> getBackbones() {
-        return null;
+        List<List<BondedAtom>> tmp = new ArrayList<>();
+        for (BondedAtom a : getTips()) {
+            for (BondedAtom b : getTips()) {
+                if (!a.equals(b)) {
+                    tmp.add(findPath(a, b));
+                }
+            }
+        }
+        return tmp;
+
     }
 
     /**
@@ -162,7 +317,13 @@ public class MoleculeAnalyzer {
      * @see <a href="https://en.wikipedia.org/wiki/Pathfinding">Graph Pathfinding</a>
      */
     public List<BondedAtom> findPath(final BondedAtom start, final BondedAtom end) {
-        return findPath(start, end, new ArrayList<>());
+        List<BondedAtom> pa = new ArrayList<>();
+        try {
+            findPath(start, end, pa);
+        } catch (Exception e) {
+            return ((Stop) e).getList();
+        }
+        return null;
     }
 
     /**
@@ -179,8 +340,32 @@ public class MoleculeAnalyzer {
      * @return the path from the current atom to the end atom
      * @see <a href="https://en.wikipedia.org/wiki/Pathfinding">Graph Pathfinding</a>
      */
+
     public List<BondedAtom> findPath(final BondedAtom current, final BondedAtom end, final List<BondedAtom> path) {
+        path.add(current);
+        for (int i = 0; i < 4; i++) {
+            if (current.getConnectedAtom(i) != null
+                    && !path.contains(current.getConnectedAtom(i))) {
+                if (current.getConnectedAtom(i).equals(end)) {
+                    path.add(current.getConnectedAtom(i));
+                    throw new Stop(path);
+                } else {
+                    List<BondedAtom> find = findPath(current.getConnectedAtom(i), end, path);
+                    if (find == null) {
+                        int d = path.indexOf(current.getConnectedAtom(i));
+                        for (; ; d++) {
+                            if (path.size() > d) {
+                                path.remove(d);
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return null;
+
     }
 
     /**
@@ -196,7 +381,15 @@ public class MoleculeAnalyzer {
      * @return the backbone ring rotated into the correct position, never null
      */
     public List<BondedAtom> rotateRing(final List<BondedAtom> ring) {
-        return null;
+        List<BondedAtom> tmp = new ArrayList<>();
+        for (BondedAtom atom : ring) {
+            if (atom.hasSubstituent(ring)) {
+                tmp.addAll(ring.subList(ring.indexOf(atom), ring.size()));
+                tmp.addAll(ring.subList(0, ring.indexOf(atom)));
+                return tmp;
+            }
+        }
+        return ring;
     }
 
     /**
@@ -208,50 +401,50 @@ public class MoleculeAnalyzer {
      * @return The systematic IUPAC name of the molecule.
      */
     public String getIupacName() {
-        boolean isRing = true;
-        List<BondedAtom> backbone = getRing();
+        boolean isring = true;
+        List<BondedAtom> bb = getRing();
 
-        if (backbone == null) {
+        if (bb == null) {
             // It's a linear molecule, not a ring
-            isRing = false;
-            backbone = getLinearBackbone();
+            isring = false;
+            bb = getLinearBackbone();
         } else {
             // It's a ring
-            backbone = rotateRing(backbone);
+            bb = rotateRing(bb);
         }
         // Find, name, and number substituents
-        int position = 1;
+        int p = 1;
         String suffixGroup = null;
         List<Integer> suffixGroupPositions = new ArrayList<>();
         Map<String, List<Integer>> substituentCounts = new HashMap<>();
-        for (BondedAtom atom : backbone) {
-            if (!isRing && position == 1) {
-                String endGroup = atom.nameEndGroup();
-                if (endGroup != null) {
-                    suffixGroup = endGroup;
-                    position++;
+        for (BondedAtom atom : bb) {
+            if (p == 1 && !isring) {
+                String end = atom.nameEndGroup();
+                if (end != null) {
+                    suffixGroup = end;
+                    p += 1;
                     continue;
                 }
             }
             for (BondedAtom neighbor : atom) {
-                if (neighbor.isSubstituent(backbone)) {
+                if (neighbor.isSubstituent(bb)) {
                     String subName = atom.nameSubstituent(neighbor);
                     if (neighbor.getElement() == ChemicalElement.OXYGEN) {
                         suffixGroup = subName;
-                        suffixGroupPositions.add(position);
+                        suffixGroupPositions.add(p);
                     } else if (substituentCounts.containsKey(subName)) {
-                        substituentCounts.get(subName).add(position);
+                        substituentCounts.get(subName).add(p);
                     } else {
-                        ArrayList<Integer> newList = new ArrayList<>();
-                        newList.add(position);
-                        substituentCounts.put(subName, newList);
+                        ArrayList<Integer> tmp = new ArrayList<>();
+                        tmp.add(p);
+                        substituentCounts.put(subName, tmp);
                     }
                 }
             }
-            position++;
+            p = p + 1;
         }
         // We're almost done! Put all the parts together
-        return assembleName(backbone.size(), isRing, substituentCounts, suffixGroup, suffixGroupPositions);
+        return assembleName(bb.size(), isring, substituentCounts, suffixGroup, suffixGroupPositions);
     }
 
     /**
@@ -288,7 +481,7 @@ public class MoleculeAnalyzer {
                 if (suffixMultiplicity.endsWith("a") && suffixName.startsWith("o")) {
                     // It's "tetrol", not "tetraol"
                     suffixMultiplicity = suffixMultiplicity.substring(0,
-                        suffixMultiplicity.length() - 1);
+                            suffixMultiplicity.length() - 1);
                 }
                 suffix = suffixMultiplicity + suffix;
             }
@@ -304,7 +497,7 @@ public class MoleculeAnalyzer {
         List<String> substituentNameFragments = new ArrayList<>();
         for (String s : substituentNames) {
             substituentNameFragments.add(locantString(substituents.get(s)) + "-"
-                + NamingConstants.MULTIPLICITY_NAMES[substituents.get(s).size() - 1] + s);
+                    + NamingConstants.MULTIPLICITY_NAMES[substituents.get(s).size() - 1] + s);
         }
         if (substituentNameFragments.size() > 0) {
             StringBuilder substituentsPart = new StringBuilder();
@@ -316,7 +509,6 @@ public class MoleculeAnalyzer {
             return name;
         }
     }
-
     /**
      * Combines a set of locants into a comma-separated string.
      * @param locants The sorted list of locants.
@@ -337,11 +529,12 @@ public class MoleculeAnalyzer {
      * @return A chemical formula indicating all atoms the molecule contains.
      */
     public String getFormula() {
-        ChemicalElement[] elements =
-            {ChemicalElement.CARBON, ChemicalElement.HYDROGEN,
-             ChemicalElement.BROMINE, ChemicalElement.CHLORINE,
-             ChemicalElement.FLUORINE,  ChemicalElement.OXYGEN};
-        StringBuilder formula = new StringBuilder();
+        ChemicalElement[] elements = {ChemicalElement.CARBON, ChemicalElement.HYDROGEN,
+                                      ChemicalElement.BROMINE, ChemicalElement.CHLORINE,
+                                      ChemicalElement.FLUORINE,  ChemicalElement.OXYGEN};
+
+
+        StringBuilder f = new StringBuilder();
         for (ChemicalElement e : elements) {
             int count = 0;
             for (BondedAtom a : allAtoms) {
@@ -350,11 +543,11 @@ public class MoleculeAnalyzer {
                 }
             }
             if (count > 1) {
-                formula.append(e.getSymbol()).append(String.valueOf(count));
+                f.append(e.getSymbol()).append(String.valueOf(count));
             } else if (count > 0) {
-                formula.append(e.getSymbol());
+                f.append(e.getSymbol());
             }
         }
-        return formula.toString();
+        return f.toString();
     }
 }

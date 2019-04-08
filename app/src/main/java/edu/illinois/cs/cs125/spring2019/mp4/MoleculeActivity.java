@@ -22,6 +22,10 @@ import edu.illinois.cs.cs125.spring2019.mp4.lib.CyclicOrganicMoleculeBuilder;
 import edu.illinois.cs.cs125.spring2019.mp4.lib.LinearOrganicMoleculeBuilder;
 import edu.illinois.cs.cs125.spring2019.mp4.lib.OrganicMoleculeBuilder;
 
+/**
+ * sgj.
+ * dgj
+ */
 public class MoleculeActivity extends Activity {
 
     /**
@@ -94,6 +98,7 @@ public class MoleculeActivity extends Activity {
         ((Switch) findViewById(R.id.useColorSwitch)).setChecked(useColor);
 
         // Restore the last-viewed molecule index from SharedPreferences
+        currentMoleculeIndex = sharedPreferences.getInt(PREF_LAST_MOLECULE, MODE_PRIVATE);
 
         // Set up our WebView to display the current molecule
         webView = findViewById(R.id.webView);
