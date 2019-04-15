@@ -50,23 +50,16 @@ public class MoleculeAnalyzer {
      * @return all atoms found in the molecule
      * @see <a href="https://en.wikipedia.org/wiki/Graph_traversal">Graph Traversal</a>
      */
-    public ArrayList<BondedAtom> findAllAtoms(final BondedAtom current, final ArrayList<BondedAtom> atoms) {
-        atoms.add(current);
-        int i = 0;
-
-        while (current.getConnectedAtom(i) != null) {
-            BondedAtom tmp = current.getConnectedAtom(i);
-            if (!atoms.contains(tmp)) {
-                if (Math.random() == 0) {
-                    findAllAtoms(tmp, atoms);
-                } else {
-                    findAllAtoms(tmp, atoms);
-                }
-            }
-            i = i + 1;
+    public java.util.List<BondedAtom> findAllAtoms(final BondedAtom current, final java.util.List<BondedAtom> atoms) {
+        if (atoms.contains(current)) {
+            return atoms;
         }
-
-        return atoms;
+        atoms.add(current);
+        for (BondedAtom neighbor: current) {
+            findAllAtoms(neighbor, atoms);
+        }
+        allAtoms = atoms;
+        return allAtoms;
     }
 
     /**
@@ -185,18 +178,19 @@ public class MoleculeAnalyzer {
         visited.add(current);
         for (int i = 0; i < 4; i++) {
             BondedAtom tmp = current.getConnectedAtom(i);
-            if (tmp != null
-                    && !((visited.size() == 2 && tmp.equals(visited.get(0)))
-                    || visited.subList(1, visited.size()).contains(tmp))) {
-                if (visited.get(0).equals(tmp)) {
-                    throw new Stop(visited);
-                } else {
-                    List<BondedAtom> findAtom = getRing(tmp, visited);
-                    if (findAtom == null) {
-                        int d = visited.indexOf(tmp);
-                        while (visited.size() > d || d + 1 < visited.size()) {
-                            visited.remove(d);
-                            d = d + 1;
+            if (tmp != null) {
+                if (!((visited.size() == 2 && tmp.equals(visited.get(0)))
+                        || visited.subList(1, visited.size()).contains(tmp))) {
+                    if (visited.get(0).equals(tmp)) {
+                        throw new Stop(visited);
+                    } else {
+                        List<BondedAtom> findAtom = getRing(tmp, visited);
+                        if (findAtom == null) {
+                            int d = visited.indexOf(tmp);
+                            while (visited.size() > d || d + 1 < visited.size()) {
+                                visited.remove(d);
+                                d = d + 1;
+                            }
                         }
                     }
                 }
@@ -344,20 +338,21 @@ public class MoleculeAnalyzer {
     public List<BondedAtom> findPath(final BondedAtom current, final BondedAtom end, final List<BondedAtom> path) {
         path.add(current);
         for (int i = 0; i < 4; i++) {
-            if (current.getConnectedAtom(i) != null
-                    && !path.contains(current.getConnectedAtom(i))) {
-                if (current.getConnectedAtom(i).equals(end)) {
-                    path.add(current.getConnectedAtom(i));
-                    throw new Stop(path);
-                } else {
-                    List<BondedAtom> find = findPath(current.getConnectedAtom(i), end, path);
-                    if (find == null) {
-                        int d = path.indexOf(current.getConnectedAtom(i));
-                        for (; ; d++) {
-                            if (path.size() > d) {
-                                path.remove(d);
-                            } else {
-                                break;
+            if (current.getConnectedAtom(i) != null) {
+                if (!path.contains(current.getConnectedAtom(i))) {
+                    if (current.getConnectedAtom(i).equals(end)) {
+                        path.add(current.getConnectedAtom(i));
+                        throw new Stop(path);
+                    } else {
+                        List<BondedAtom> find = findPath(current.getConnectedAtom(i), end, path);
+                        if (find == null) {
+                            int d = path.indexOf(current.getConnectedAtom(i));
+                            for (; ; d++) {
+                                if (path.size() > d) {
+                                    path.remove(d);
+                                } else {
+                                    break;
+                                }
                             }
                         }
                     }
