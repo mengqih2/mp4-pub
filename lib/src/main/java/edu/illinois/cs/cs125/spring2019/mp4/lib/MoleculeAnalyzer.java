@@ -13,7 +13,7 @@ public class MoleculeAnalyzer {
 
     /**
      * List of all atoms in this molecule.
-     * <p>
+     * <pe>
      * You should set this properly in your constructor using findAllAtoms. Once you do it makes several
      * other functions (getMolecularWeight, hasChargedAtoms) easy to complete.
      */
